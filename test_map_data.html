@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Map Data</title>
+</head>
+<body>
+    <h1>Testing GPS Data Flow</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:8000/api/reports?limit=5');
+                const data = await response.json();
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '<h2>API Response:</h2>';
+                output.innerHTML += `<p>Total reports: ${data.reports.length}</p>`;
+                
+                data.reports.forEach((report, idx) => {
+                    const hasGPS = report.location && report.location.lat && report.location.lon;
+                    output.innerHTML += `
+                        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+                            <h3>Report ${idx + 1}: ${report.event_type}</h3>
+                            <p>Status: ${report.verification_status}</p>
+                            <p>City: ${report.location?.city}, ${report.location?.state}</p>
+                            <p style="color: ${hasGPS ? 'green' : 'red'}; font-weight: bold;">
+                                GPS: ${hasGPS ? 
+                                    `✓ lat=${report.location.lat.toFixed(6)}, lon=${report.location.lon.toFixed(6)}` : 
+                                    '✗ No GPS data'
+                                }
+                            </p>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('output').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

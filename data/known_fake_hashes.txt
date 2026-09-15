@@ -1,0 +1,27 @@
+# Known Fake Disaster Photo Hashes
+# This file contains perceptual hashes (pHash) of common disaster stock photos
+# that are frequently recycled as "breaking news" in fake weather reports.
+#
+# Format: One hash per line (64-character hex string from 8x8 pHash)
+# Lines starting with # are comments and will be ignored
+#
+# Example hashes (these are sample/test hashes - in production, compute from actual images):
+
+# Sample fake flood image (test hash 1)
+a1b2c3d4e5f6a7b8
+
+# Sample fake hurricane damage (test hash 2)
+1234567890abcdef
+
+# Sample fake drought/wildfire (test hash 3)
+fedcba9876543210
+
+# Sample fake storm damage (test hash 4)
+0000111122223333
+
+# Sample fake tornado (test hash 5)
+aaaa0000bbbb1111
+
+# Add real fake disaster photo hashes below as you discover them
+# To generate a hash from an image:
+# python -c "import imagehash; from PIL import Image; print(imagehash.phash(Image.open('fake_image.jpg')))"
