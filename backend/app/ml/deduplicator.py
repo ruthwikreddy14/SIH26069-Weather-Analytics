@@ -65,13 +65,12 @@ class TextDeduplicator:
     
     # Distance for "same region" check (meters)
     REGION_RADIUS_METERS = 50000  # 50km
-       def __init__(self, model_name: str = "lightweight-hash"):
-    """
-    Initialize lightweight text deduplicator without ML model.
-    """
-    self.embedding_dim = 384
-    logger.info("Lightweight text deduplicator initialized")
-
+    def __init__(self, model_name: str = "lightweight-hash"):
+        """
+        Initialize lightweight text deduplicator without ML model.
+        """
+        self.embedding_dim = 384
+        logger.info("Lightweight text deduplicator initialized")
 
     
    def compute_embedding(self, text: str) -> np.ndarray:
