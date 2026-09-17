@@ -73,32 +73,31 @@ class TextDeduplicator:
         logger.info("Lightweight text deduplicator initialized")
 
     
-   def compute_embedding(self, text: str) -> np.ndarray:
-    """
-    Create a lightweight text embedding using hashed word features.
-    This avoids heavy ML models while preserving similarity detection.
-    """
-    if not text or not text.strip():
-        raise ValueError("Cannot compute embedding for empty text")
+    def compute_embedding(self, text: str) -> np.ndarray:
+        """
+        Create a lightweight text embedding using hashed word features.
+        This avoids heavy ML models while preserving similarity detection.
+        """
+        if not text or not text.strip():
+            raise ValueError("Cannot compute embedding for empty text")
 
-    text = " ".join(text.split()).lower()
+        text = " ".join(text.split()).lower()
 
-    embedding = np.zeros(self.embedding_dim, dtype=np.float32)
+        embedding = np.zeros(self.embedding_dim, dtype=np.float32)
 
-    tokens = re.findall(r"\b\w+\b", text)
+        tokens = re.findall(r"\b\w+\b", text)
+        for token in tokens:
+            digest = hashlib.sha256(token.encode("utf-8")).digest()
+            index = int.from_bytes(digest[:4], "little") % self.embedding_dim
+            embedding[index] += 1.0
 
-    for token in tokens:
-        digest = hashlib.sha256(token.encode("utf-8")).digest()
-        index = int.from_bytes(digest[:4], "little") % self.embedding_dim
-        embedding[index] += 1.0
+        norm = np.linalg.norm(embedding)
 
-    norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding /= norm
 
-    if norm > 0:
-        embedding /= norm
+        return embedding
 
-    return embedding
-    
     @staticmethod
     def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
         """
