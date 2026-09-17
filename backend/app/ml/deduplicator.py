@@ -65,7 +65,7 @@ class TextDeduplicator:
     
     # Distance for "same region" check (meters)
     REGION_RADIUS_METERS = 50000  # 50km
-   def __init__(self, model_name: str = "lightweight-hash"):
+       def __init__(self, model_name: str = "lightweight-hash"):
     """
     Initialize lightweight text deduplicator without ML model.
     """
