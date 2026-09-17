@@ -20,7 +20,8 @@ from typing import Optional, List, Dict, Any
 import numpy as np
 from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sentence_transformers import SentenceTransformer
+import re
+import hashlib
 
 from app.models.weather_report import WeatherReport, EventCluster, VerificationLog
 
@@ -64,42 +65,40 @@ class TextDeduplicator:
     
     # Distance for "same region" check (meters)
     REGION_RADIUS_METERS = 50000  # 50km
+   def __init__(self, model_name: str = "lightweight-hash"):
+    """
+    Initialize lightweight text deduplicator without ML model.
+    """
+    self.embedding_dim = 384
+    logger.info("Lightweight text deduplicator initialized")
+
+
     
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        """
-        Initialize the text deduplicator.
-        
-        Args:
-            model_name: Sentence-transformers model name
-        """
-        logger.info(f"Loading sentence-transformers model: {model_name}")
-        try:
-            self.model = SentenceTransformer(model_name)
-            logger.info(f"Model loaded successfully (embedding dim: {self.model.get_sentence_embedding_dimension()})")
-        except Exception as e:
-            logger.error(f"Failed to load model {model_name}: {e}")
-            raise
-    
-    def compute_embedding(self, text: str) -> np.ndarray:
-        """
-        Compute embedding vector for text.
-        
-        Args:
-            text: Input text to embed
-            
-        Returns:
-            384-dimensional embedding vector
-        """
-        if not text or not text.strip():
-            raise ValueError("Cannot compute embedding for empty text")
-        
-        # Normalize whitespace
-        text = " ".join(text.split())
-        
-        # Compute embedding
-        embedding = self.model.encode(text, convert_to_numpy=True)
-        
-        return embedding
+   def compute_embedding(self, text: str) -> np.ndarray:
+    """
+    Create a lightweight text embedding using hashed word features.
+    This avoids heavy ML models while preserving similarity detection.
+    """
+    if not text or not text.strip():
+        raise ValueError("Cannot compute embedding for empty text")
+
+    text = " ".join(text.split()).lower()
+
+    embedding = np.zeros(self.embedding_dim, dtype=np.float32)
+
+    tokens = re.findall(r"\b\w+\b", text)
+
+    for token in tokens:
+        digest = hashlib.sha256(token.encode("utf-8")).digest()
+        index = int.from_bytes(digest[:4], "little") % self.embedding_dim
+        embedding[index] += 1.0
+
+    norm = np.linalg.norm(embedding)
+
+    if norm > 0:
+        embedding /= norm
+
+    return embedding
     
     @staticmethod
     def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
